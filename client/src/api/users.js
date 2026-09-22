@@ -9,3 +9,6 @@ export const updateUserRole = (id, role) =>
 export const updateUserStatus = (id, status) =>
   axiosClient.patch(`/admin/users/${id}/status`, { status });
 export const deleteUser = (id) => axiosClient.delete(`/admin/users/${id}`);
+
+
+console.log('users.js loaded');
