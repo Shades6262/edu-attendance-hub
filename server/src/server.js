@@ -9,6 +9,9 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
+const trackerRoutes = require('./routes/trackerRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 // console.log('MONGO_URI:', process.env.MONGO_URI);
 connectDB()
 
@@ -21,6 +24,9 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api/tracker-reports', trackerRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/ai', aiRoutes);
 app.get('/api/health', (req, res) => {
     res.json({ message: 'Server is healthy' })
 });

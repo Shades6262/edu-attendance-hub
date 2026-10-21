@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getAssignments } from '../../api/assignments';
 import { getSubmissionsForAssignment, reviewSubmission } from '../../api/submissions';
+import { SharedLoader } from '../../components/loaders/SharedLoader';
+import { EmptyState } from '../../components/common/EmptyState';
 
 const ReviewSubmissions = () => {
   const [assignments, setAssignments] = useState([]);
@@ -55,37 +57,38 @@ const ReviewSubmissions = () => {
     }
   };
 
-  if (loadingAssignments) return <p className="text-gray-500">Loading assignments...</p>;
+  if (loadingAssignments) return <SharedLoader message="Loading assignments..." />;
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Review Submissions</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Review Submissions</h2>
 
       {error && (
-        <div className="bg-red-100 text-red-700 text-sm p-3 rounded mb-4">{error}</div>
+        <div className="bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 text-sm p-3 rounded-xl mb-4">{error}</div>
       )}
 
       {assignments.length === 0 ? (
-        <div className="bg-white border rounded-lg p-8 text-center text-gray-500">
-          You haven't posted any assignments yet.
-        </div>
+        <EmptyState
+          title="No assignments posted"
+          description="You haven't posted any assignments yet."
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
-            <h3 className="text-sm font-medium text-gray-600 mb-2">Your Assignments</h3>
+            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Your Assignments</h3>
             <div className="space-y-2">
               {assignments.map((a) => (
                 <button
                   key={a._id}
                   onClick={() => handleSelectAssignment(a)}
-                  className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition ${
+                  className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition shadow-xs ${
                     selectedAssignment?._id === a._id
-                      ? 'bg-blue-50 border-blue-400'
-                      : 'bg-white hover:bg-gray-50'
+                      ? 'bg-green-50 dark:bg-green-950/50 border-green-500 text-green-800 dark:text-green-300'
+                      : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200'
                   }`}
                 >
-                  <p className="font-medium text-gray-800">{a.title}</p>
-                  <p className="text-xs text-gray-500">{a.group?.name}</p>
+                  <p className="font-semibold">{a.title}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{a.group?.name}</p>
                 </button>
               ))}
             </div>
@@ -93,32 +96,32 @@ const ReviewSubmissions = () => {
 
           <div className="md:col-span-2">
             {!selectedAssignment ? (
-              <div className="bg-white border rounded-lg p-8 text-center text-gray-500">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center text-gray-500 dark:text-gray-400 shadow-sm">
                 Select an assignment to view its submissions.
               </div>
             ) : loadingSubmissions ? (
-              <p className="text-gray-500">Loading submissions...</p>
+              <SharedLoader message="Loading submissions..." />
             ) : submissions.length === 0 ? (
-              <div className="bg-white border rounded-lg p-8 text-center text-gray-500">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center text-gray-500 dark:text-gray-400 shadow-sm">
                 No submissions yet for "{selectedAssignment.title}".
               </div>
             ) : (
               <div className="space-y-4">
                 {submissions.map((s) => (
-                  <div key={s._id} className="bg-white border rounded-lg p-4">
+                  <div key={s._id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium text-gray-800">{s.student?.name}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{s.student?.name}</p>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded ${
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                           s.status === 'reviewed'
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-yellow-50 text-yellow-700'
+                            ? 'bg-green-50 dark:bg-green-950/60 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                            : 'bg-yellow-50 dark:bg-yellow-950/60 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800'
                         }`}
                       >
                         {s.status}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 break-all mb-3">{s.content}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 break-all mb-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">{s.content}</p>
 
                     <textarea
                       placeholder="Leave feedback..."
@@ -127,13 +130,13 @@ const ReviewSubmissions = () => {
                         setFeedbackDrafts((prev) => ({ ...prev, [s._id]: e.target.value }))
                       }
                       rows={2}
-                      className="w-full border rounded px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="w-full border border-gray-300 dark:border-gray-700 rounded-xl px-3.5 py-2.5 text-sm mb-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-inner"
                     />
 
                     <button
                       onClick={() => handleReview(s._id)}
                       disabled={reviewingId === s._id}
-                      className="text-xs bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                      className="text-xs bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-50 transition shadow-sm"
                     >
                       {reviewingId === s._id ? 'Saving...' : 'Save Review'}
                     </button>

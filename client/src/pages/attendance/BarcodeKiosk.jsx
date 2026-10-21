@@ -3,12 +3,10 @@ import { scanAttendance } from '../../api/attendance';
 
 const BarcodeKiosk = () => {
   const [barcodeInput, setBarcodeInput] = useState('');
-  const [feedback, setFeedback] = useState(null); // { type: 'success'|'error', message }
+  const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
 
-  // keep the input focused at all times so the scanner's keystrokes always land here,
-  // even if someone accidentally clicks elsewhere on the page
   const refocus = () => {
     inputRef.current?.focus();
   };
@@ -19,7 +17,6 @@ const BarcodeKiosk = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // auto-clear feedback after a few seconds so the kiosk resets for the next person
   useEffect(() => {
     if (!feedback) return;
     const timeout = setTimeout(() => setFeedback(null), 4000);
@@ -53,16 +50,16 @@ const BarcodeKiosk = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4 transition-colors duration-200">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <a href="/admin" className="text-xs text-gray-500 hover:text-gray-300">
+          <a href="/admin" className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition">
             ← Exit kiosk
           </a>
         </div>
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-1">Attendance Scanner</h1>
-          <p className="text-gray-400 text-sm">Scan your barcode to sign in or out</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Attendance Scanner</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Scan your barcode to sign in or out</p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -74,48 +71,40 @@ const BarcodeKiosk = () => {
             onBlur={refocus}
             autoFocus
             placeholder="Waiting for scan..."
-            className="w-full bg-gray-800 text-white text-center text-lg border-2 border-gray-700 rounded-lg px-4 py-4 focus:outline-none focus:border-blue-500"
+            className="w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-center text-lg border-2 border-gray-300 dark:border-gray-700 rounded-xl px-4 py-4 focus:outline-none focus:border-green-600 dark:focus:border-green-500 shadow-sm transition"
           />
         </form>
 
         <div className="mt-6 min-h-25">
           {loading && (
-            <div className="bg-gray-800 rounded-lg p-4 text-center text-gray-400 text-sm">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 text-center text-gray-500 dark:text-gray-400 text-sm shadow-sm">
               Processing...
             </div>
           )}
 
           {!loading && feedback && (
             <div
-              className={`rounded-lg p-5 text-center ${
+              className={`rounded-xl p-5 text-center shadow-sm ${
                 feedback.type === 'success'
                   ? feedback.action === 'sign-in'
-                    ? 'bg-green-900/40 border border-green-600'
-                    : 'bg-blue-900/40 border border-blue-600'
-                  : 'bg-red-900/40 border border-red-600'
+                    ? 'bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300'
+                    : 'bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300'
               }`}
             >
-              <p
-                className={`text-lg font-semibold ${
-                  feedback.type === 'success'
-                    ? feedback.action === 'sign-in'
-                      ? 'text-green-400'
-                      : 'text-blue-400'
-                    : 'text-red-400'
-                }`}
-              >
+              <p className="text-lg font-semibold">
                 {feedback.type === 'success'
                   ? feedback.action === 'sign-in'
                     ? '✓ Signed In'
                     : '✓ Signed Out'
                   : '✗ Error'}
               </p>
-              <p className="text-gray-300 text-sm mt-1">{feedback.message}</p>
+              <p className="text-sm mt-1 opacity-90">{feedback.message}</p>
             </div>
           )}
 
           {!loading && !feedback && (
-            <div className="text-center text-gray-600 text-sm pt-6">
+            <div className="text-center text-gray-400 dark:text-gray-500 text-sm pt-6">
               No recent scans
             </div>
           )}

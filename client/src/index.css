@@ -1,1 +1,14 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.font-magz,
+.font-altere,
+.font-shanoy {
+  font-family: 'Cinzel Decorative', cursive, serif;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}

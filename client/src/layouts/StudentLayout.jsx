@@ -1,20 +1,16 @@
-import { Outlet } from 'react-router-dom';
-import Navbar from '../components/common/Navbar';
+import { DashboardLayout } from '../components/common/DashboardLayout';
+import { BookOpen, CalendarCheck, MessageSquare } from 'lucide-react';
+import { useDocumentTitle } from '../utils/useDocumentTitle';
 
 const links = [
-  { to: '/student', label: 'Assignments', end: true },
-  { to: '/student/attendance', label: 'My Attendance' },
+  { to: '/student', label: 'Assignments', end: true, icon: BookOpen },
+  { to: '/student/attendance', label: 'My Attendance', icon: CalendarCheck },
+  { to: '/student/chat', label: 'Chat', icon: MessageSquare },
 ];
 
 const StudentLayout = () => {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar title="Student Dashboard" links={links} />
-      <main className="p-6">
-        <Outlet />
-      </main>
-    </div>
-  );
+  useDocumentTitle('Student Dashboard');
+  return <DashboardLayout title="Student Dashboard" links={links} />;
 };
 
 export default StudentLayout;

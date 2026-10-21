@@ -1,7 +1,19 @@
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const User = require('../../models/User');
 const generateToken = require('../utils/generateToken');
 const generateBarcodeId = require('../utils/generateBarcodeId');
+
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // @route POST /api/auth/register
 const registerUser = async (req, res) => {
@@ -45,7 +57,9 @@ const registerUser = async (req, res) => {
         email: user.email,
         role: user.role,
         status: user.status,
-        barcodeId: user.barcodeId
+        barcodeId: user.barcodeId,
+        instructorGroup: user.instructorGroup,
+        profilePictureUrl: user.profilePictureUrl,
       }
     });
   } catch (err) {
@@ -84,7 +98,9 @@ const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        status: user.status
+        status: user.status,
+        instructorGroup: user.instructorGroup,
+        profilePictureUrl: user.profilePictureUrl,
       }
     });
   } catch (err) {
@@ -92,4 +108,85 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+// @route PUT /api/auth/profile-picture
+const updateProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      return res.status(500).json({ message: 'Cloudinary is not configured on the server. Please check environment variables.' });
+    }
+
+    const uploadPromise = new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'eduattendance_profiles' },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+
+    const result = await uploadPromise;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profilePictureUrl: result.secure_url },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      message: 'Profile picture updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        instructorGroup: user.instructorGroup,
+        profilePictureUrl: user.profilePictureUrl,
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error uploading image', error: err.message });
+  }
+};
+
+// @route DELETE /api/auth/profile-picture
+const removeProfilePicture = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profilePictureUrl: '' },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      message: 'Profile picture removed successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        instructorGroup: user.instructorGroup,
+        profilePictureUrl: user.profilePictureUrl,
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error removing image', error: err.message });
+  }
+};
+
+module.exports = { registerUser, loginUser, updateProfilePicture, removeProfilePicture, upload };

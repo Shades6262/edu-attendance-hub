@@ -17,12 +17,22 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem("token");
       }
     }
-    setLoading(false);
+    
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
   
   const login = (userData, token) => {
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", token);
+    setUser(userData);
+  };
+
+  const updateUser = (userData) => {
+    localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
   };
 
@@ -33,7 +43,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, updateUser, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );  

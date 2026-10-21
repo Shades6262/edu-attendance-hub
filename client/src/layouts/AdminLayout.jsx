@@ -1,21 +1,17 @@
-import { Outlet } from 'react-router-dom';
-import Navbar from '../components/common/Navbar';
+import { DashboardLayout } from '../components/common/DashboardLayout';
+import { UserCheck, Users, FileText, QrCode } from 'lucide-react';
+import { useDocumentTitle } from '../utils/useDocumentTitle';
 
 const links = [
-  { to: '/admin', label: 'Pending Approvals', end: true },
-  { to: '/admin/users', label: 'All Users' },
-  { to: '/kiosk', label: 'Attendance Kiosk' },
+  { to: '/admin', label: 'Pending Approvals', end: true, icon: UserCheck },
+  { to: '/admin/users', label: 'All Users', icon: Users },
+  { to: '/admin/reports', label: 'Tracker Reports', icon: FileText },
+  { to: '/kiosk', label: 'Attendance Kiosk', icon: QrCode },
 ];
 
 const AdminLayout = () => {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar title="Admin Dashboard" links={links} />
-      <main className="p-6">
-        <Outlet />
-      </main>
-    </div>
-  );
+  useDocumentTitle('Admin Dashboard');
+  return <DashboardLayout title="Admin Dashboard" links={links} />;
 };
 
 export default AdminLayout;

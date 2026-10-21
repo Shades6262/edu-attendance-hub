@@ -1,21 +1,17 @@
-import { Outlet } from 'react-router-dom';
-import Navbar from '../components/common/Navbar';
+import { DashboardLayout } from '../components/common/DashboardLayout';
+import { Users, CheckSquare, FileText, QrCode } from 'lucide-react';
+import { useDocumentTitle } from '../utils/useDocumentTitle';
 
 const links = [
-  { to: '/instructor', label: 'My Groups', end: true },
-  { to: '/instructor/submissions', label: 'Review Submissions' },
-  { to: '/kiosk', label: 'Attendance Kiosk' },
+  { to: '/instructor', label: 'My Groups', end: true, icon: Users },
+  { to: '/instructor/submissions', label: 'Review Submissions', icon: CheckSquare },
+  { to: '/instructor/reports', label: 'Tracker Reports', icon: FileText },
+  { to: '/kiosk', label: 'Attendance Kiosk', icon: QrCode },
 ];
 
 const InstructorLayout = () => {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar title="Instructor Dashboard" links={links} />
-      <main className="p-6">
-        <Outlet />
-      </main>
-    </div>
-  );
+  useDocumentTitle('Instructor Dashboard');
+  return <DashboardLayout title="Instructor Dashboard" links={links} />;
 };
 
 export default InstructorLayout;

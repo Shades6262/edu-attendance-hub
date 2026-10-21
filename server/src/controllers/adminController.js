@@ -1,4 +1,5 @@
 const User = require('../../models/User');
+const AiConversation = require('../../models/AiConversation');
 const generateBarcodeId = require('../utils/generateBarcodeId');
 
 // @route GET /api/admin/pending-users
@@ -91,6 +92,8 @@ const deleteUser = async (req, res) => {
 
   const user = await User.findByIdAndDelete(id);
   if (!user) return res.status(404).json({ message: 'User not found' });
+
+  await AiConversation.deleteMany({ user: id });
 
   res.json({ message: 'User deleted' });
 };
