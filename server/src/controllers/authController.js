@@ -4,6 +4,7 @@ const cloudinary = require('cloudinary').v2;
 const User = require('../../models/User');
 const generateToken = require('../utils/generateToken');
 const generateBarcodeId = require('../utils/generateBarcodeId');
+const { sendVerificationEmail } = require('./emailAuthController');
 
 if (process.env.CLOUDINARY_CLOUD_NAME) {
   cloudinary.config({
@@ -14,6 +15,17 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
 }
 
 const upload = multer({ storage: multer.memoryStorage() });
+
+const formatUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  status: user.status,
+  barcodeId: user.barcodeId,
+  instructorGroup: user.instructorGroup,
+  profilePictureUrl: user.profilePictureUrl,
+});
 
 // @route POST /api/auth/register
 const registerUser = async (req, res) => {
@@ -36,31 +48,25 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      barcodeId: role === 'student' ? generateBarcodeId(role) : undefined
+      emailVerified: false,
+      barcodeId: role === 'student' ? generateBarcodeId(role) : undefined,
     });
 
-    // Students get a token immediately since they're auto-approved.
-    // Instructors/admins are pending — don't log them in yet.
-    if (user.status === 'pending') {
-      return res.status(201).json({
-        message: 'Registration successful. Awaiting admin approval.',
-        status: user.status
-      });
+    // Nobody is logged in at registration anymore: they must verify their email first.
+    // (Instructors/admins also still need admin approval after verifying.)
+    let emailSent = true;
+    try {
+      await sendVerificationEmail(user);
+    } catch (e) {
+      emailSent = false;
+      console.error('Verification email failed:', e.message);
     }
 
-    const token = generateToken(user);
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        barcodeId: user.barcodeId,
-        instructorGroup: user.instructorGroup,
-        profilePictureUrl: user.profilePictureUrl,
-      }
+    return res.status(201).json({
+      message: emailSent
+        ? 'Account created. Check your email (and spam folder) to verify your address before logging in.'
+        : 'Account created, but we could not send the verification email. Use "Resend verification" from the login page.',
+      needsVerification: true,
     });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -76,10 +82,22 @@ const loginUser = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+    if (!user.password) {
+      return res.status(400).json({
+        message: 'This account uses Google sign-in. Use "Continue with Google".',
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        message: 'Please verify your email before logging in.',
+        code: 'EMAIL_NOT_VERIFIED',
+      });
     }
 
     if (user.status === 'pending') {
@@ -91,18 +109,7 @@ const loginUser = async (req, res) => {
     }
 
     const token = generateToken(user);
-    res.status(200).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        instructorGroup: user.instructorGroup,
-        profilePictureUrl: user.profilePictureUrl,
-      }
-    });
+    res.status(200).json({ token, user: formatUser(user) });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -144,15 +151,7 @@ const updateProfilePicture = async (req, res) => {
 
     res.status(200).json({
       message: 'Profile picture updated successfully',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        instructorGroup: user.instructorGroup,
-        profilePictureUrl: user.profilePictureUrl,
-      }
+      user: formatUser(user),
     });
   } catch (err) {
     res.status(500).json({ message: 'Error uploading image', error: err.message });
@@ -174,15 +173,7 @@ const removeProfilePicture = async (req, res) => {
 
     res.status(200).json({
       message: 'Profile picture removed successfully',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        instructorGroup: user.instructorGroup,
-        profilePictureUrl: user.profilePictureUrl,
-      }
+      user: formatUser(user),
     });
   } catch (err) {
     res.status(500).json({ message: 'Error removing image', error: err.message });

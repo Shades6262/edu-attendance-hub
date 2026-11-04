@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useDocumentTitle } from '../../utils/useDocumentTitle';
 import { AuthThemeToggle } from '../../components/common/AuthThemeToggle';
+import GoogleButton from '../../components/auth/GoogleButton';
 import { BookOpen, CheckCircle2 } from 'lucide-react';
 
 const Register = () => {
@@ -195,6 +196,27 @@ const Register = () => {
               <span>{loading ? 'Creating account...' : 'Create Account'}</span>
             </button>
           </form>
+
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+            <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+          </div>
+
+          <GoogleButton
+            role={form.role}
+            disabled={loading}
+            onLoadingChange={setLoading}
+            onSuccess={(user) => showToast('Welcome, ' + user.name + '!', 'success')}
+            onError={(msg) => showToast(msg, 'error')}
+            onInfo={(msg) => {
+              setPendingMessage(msg);
+              showToast(msg, 'info');
+            }}
+          />
+          <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+            Google sign-up uses the role selected above.
+          </p>
 
           <p className="text-sm text-center mt-8 text-gray-600 dark:text-gray-400">
             Already have an account?{' '}

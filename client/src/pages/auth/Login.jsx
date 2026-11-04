@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { useDocumentTitle } from '../../utils/useDocumentTitle';
 import { LoginLoader } from '../../components/loaders/LoginLoader';
 import { AuthThemeToggle } from '../../components/common/AuthThemeToggle';
+import GoogleButton from '../../components/auth/GoogleButton';
 import { BookOpen, CheckCircle2 } from 'lucide-react';
 
 const Login = () => {
@@ -142,6 +143,20 @@ const Login = () => {
               <span>Sign In</span>
             </button>
           </form>
+
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+            <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+          </div>
+
+          <GoogleButton
+            disabled={loading}
+            onLoadingChange={setLoading}
+            onSuccess={(user) => showToast('Welcome back, ' + user.name + '!', 'success')}
+            onError={(msg) => showToast(msg, 'error')}
+            onInfo={(msg) => showToast(msg, 'info')}
+          />
 
           <p className="text-sm text-center mt-8 text-gray-600 dark:text-gray-400">
             Don't have an account?{' '}
