@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const User = require('../../models/User');
+const AiConversation = require('../../models/AiConversation');
 const generateToken = require('../utils/generateToken');
 const generateBarcodeId = require('../utils/generateBarcodeId');
 const { sendVerificationEmail } = require('./emailAuthController');
@@ -180,4 +181,21 @@ const removeProfilePicture = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, updateProfilePicture, removeProfilePicture, upload };
+// @route DELETE /api/auth/account
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await AiConversation.deleteMany({ user: userId });
+
+    res.status(200).json({ message: 'Account deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+module.exports = { registerUser, loginUser, updateProfilePicture, removeProfilePicture, deleteAccount, upload };

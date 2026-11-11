@@ -8,3 +8,9 @@ export const updateProfilePicture = (formData) =>
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 export const removeProfilePicture = () => axiosClient.delete('/auth/profile-picture');
+export const deleteAccount = () => axiosClient.delete('/auth/account');
+
+export const verifyEmail = (token) => axiosClient.post('/auth/verify-email', { token });
+export const resendVerification = (email) => axiosClient.post('/auth/resend-verification', { email });
+export const forgotPassword = (email) => axiosClient.post('/auth/forgot-password', { email });
+export const resetPassword = (data) => axiosClient.post('/auth/reset-password', data);

@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { loginUser } from '../../api/auth';
+import { loginUser, resendVerification } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useDocumentTitle } from '../../utils/useDocumentTitle';
 import { LoginLoader } from '../../components/loaders/LoginLoader';
 import { AuthThemeToggle } from '../../components/common/AuthThemeToggle';
 import GoogleButton from '../../components/auth/GoogleButton';
-import { BookOpen, CheckCircle2 } from 'lucide-react';
+import { BookOpen, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const Login = () => {
   useDocumentTitle('Login');
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [resending, setResending] = useState(false);
   const { login } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -24,6 +26,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setUnverifiedEmail('');
 
     try {
       const [res] = await Promise.all([
@@ -38,11 +41,29 @@ const Login = () => {
       else if (role === 'instructor') navigate('/instructor');
       else navigate('/student');
     } catch (err) {
-      const msg = !err.response
-        ? 'Cannot reach the server. Check your connection and try again.'
-        : err.response.data?.message || 'Login failed';
-      showToast(msg, 'error');
+      if (err.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        setUnverifiedEmail(form.email);
+        showToast('Email not verified. Please check your inbox.', 'error');
+      } else {
+        const msg = !err.response
+          ? 'Cannot reach the server. Check your connection and try again.'
+          : err.response.data?.message || 'Login failed';
+        showToast(msg, 'error');
+      }
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!unverifiedEmail) return;
+    setResending(true);
+    try {
+      await resendVerification(unverifiedEmail);
+      showToast('Verification email resent! Check your inbox.', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to resend verification email', 'error');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -104,6 +125,24 @@ const Login = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Sign in to access your dashboard</p>
           </div>
 
+          {unverifiedEmail && (
+            <div className="bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-sm p-4 rounded-xl mb-6 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+              <div>
+                <p className="font-semibold">Email verification required</p>
+                <p className="text-xs mt-0.5 mb-3 opacity-90">Please verify your email before logging in.</p>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
+                >
+                  {resending ? 'Resending...' : 'Resend Verification Email'}
+                </button>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
@@ -121,9 +160,14 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Password
+                </label>
+                <Link to="/forgot-password" className="text-xs text-green-600 dark:text-green-400 hover:underline font-medium">
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 type="password"
                 name="password"
